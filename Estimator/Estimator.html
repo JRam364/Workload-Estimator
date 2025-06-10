@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Workload Estimator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:300&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/ico" href="Icon2.ico">
+
+
+
+  <style>
+    /*Style of body*/
+    body {
+      padding: 2rem;
+      padding-top: 180px;
+      /* 50 (black) + 135 (red) + buffer */
+      max-width: 1000px;
+      margin: auto;
+      position: relative;
+    }
+
+    /*Black border*/
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 45px;
+      /* adjust thickness here */
+      width: 100%;
+      background-color: rgb(31, 31, 31);
+      z-index: 1000;
+    }
+
+    /*Red Border at the top */
+    #red-bar {
+      position: fixed;
+      top: 45px;
+      /* just below the black bar */
+      left: 0;
+      width: 100%;
+      height: 115px;
+      background-color: #b31919;
+      display: flex;
+      align-items: center;
+      /* vertically center items */
+      justify-content: center;
+      /* center entire logo + text block horizontally */
+      gap: 1rem;
+      /* space between logo and text */
+      z-index: 1001;
+    }
+
+    /*Make sure image inside red bar doesn't overflow*/
+    #red-bar img {
+      max-height: 100px;
+    }
+
+    /*Text inside red bar*/
+    .skinny-font {
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 300;
+      font-size: 2rem;
+      color: white;
+      line-height: 1;
+      margin-top: 5px;
+    }
+
+    /*Add styling for form sections and blocks*/
+    .form-section {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+    }
+
+    /*Normal font*/
+    label {
+      font-weight: normal;
+    }
+
+    /*Bottom bar, not currently used*/
+    #bottom-red-bar {
+      width: 100vw;
+      /* Use 100vw for full viewport width */
+      height: 60px;
+      background-color: #b31919;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 3rem;
+    }
+
+    /*Styles the text inside the footer*/
+    .footer-text {
+      color: white;
+      font-family: 'Open Sans', sans-serif;
+      font-weight: 300;
+      font-size: 1rem;
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+
+
+  <!--Top banner containing logo and title, centered at the top-->
+  <div id="red-bar">
+    <img src="LLC_Logo.png" alt="Logo">
+    <span id="red-bar-title" class="skinny-font">Workload Estimator</span>
+  </div>
+
+  <hr>
+
+  <!--Estimator form-->
+  <form id="estimator-form">
+
+    <!--Use Bootstrap's grid system to make 2 responsive columns-->
+    <div class="row">
+
+      <!-- Column 1 -->
+      <div class="col-md-6">
+
+        <!--Course Duration-->
+        <div class="form-section">
+          <h4>Course Duration</h4>
+          <label>Weeks:</label>
+          <input type="number" id="weeks" class="form-control" value="16">
+        </div>
+
+        <!--Reading-->
+        <div class="form-section">
+          <h4>Reading</h4>
+          <label>Purpose:</label>
+          <select id="reading_purpose" class="form-select">
+            <option>Survey</option>
+            <option>Understand</option>
+            <option>Engage</option>
+          </select>
+          <label>Concept Familiarity:</label>
+          <select id="reading_concept" class="form-select">
+            <option>No New Concepts</option>
+            <option>Some New Concepts</option>
+            <option>Many New Concepts</option>
+          </select>
+          <label>Page Density:</label>
+          <select id="reading_material" class="form-select">
+            <option>450 Words</option>
+            <option>600 Words</option>
+            <option>750 Words</option>
+          </select>
+          <label>Pages per Week:</label>
+          <input type="number" id="reading_pages" class="form-control" value="0">
+          <p class="output-text" id="reading-output">Reading Time: 0.00 hours/week</p>
+        </div>
+
+        <!--Writing-->
+        <div class="form-section">
+          <h4>Writing</h4>
+          <label>Purpose:</label>
+          <select id="writing_purpose" class="form-select">
+            <option>Reflection/Narrative</option>
+            <option>Argument</option>
+            <option>Research</option>
+          </select>
+          <label>Drafting Level:</label>
+          <select id="writing_drafting" class="form-select">
+            <option>No Drafting</option>
+            <option>Minimal Drafting</option>
+            <option>Extensive Drafting</option>
+          </select>
+          <label>Page Density (Words/Page):</label>
+          <select id="writing_spacing" class="form-select">
+            <option>250</option>
+            <option>500</option>
+          </select>
+          <label>Pages (Semester Total):</label>
+          <input type="number" id="writing_pages" class="form-control" value="0">
+          <p class="output-text" id="writing-output">Writing Speed: 0.00 hours/page</p>
+        </div>
+
+        <!--Videos-->
+        <div class="form-section">
+          <h4>Videos</h4>
+          <label>Video Hours per Week:</label>
+          <input type="number" id="videos" class="form-control" value="0">
+
+        </div>
+
+        <!--Discussion Posts-->
+        <div class="form-section">
+          <h4>Discussion Posts</h4>
+          <label>Posts per Week:</label>
+          <input type="number" id="discussions_count" class="form-control" value="0">
+          <label>Average Words per Post:</label>
+          <input type="number" id="discussions_words" class="form-control" value="0">
+          <p class="output-text" id="discussion-output">Discussion Time: 0.00 hours/week</p>
+        </div>
+
+      </div>
+
+      <!-- Column 2 -->
+      <div class="col-md-6">
+
+        <!--Class meetings-->
+        <div class="form-section">
+          <h4>Class Meetings</h4>
+          <label>Meetings per Week:</label>
+          <input type="number" id="meetings_count" class="form-control" value="0">
+          <label>Meeting Length (Hours):</label>
+          <input type="number" id="meetings_length" step="0.01" class="form-control" value="0">
+          <p class="output-text" id="meeting-output">Meeting Times: 0.00 hours/week</p>
+
+        </div>
+
+        <!--Exams-->
+        <div class="form-section">
+          <h4>Exams</h4>
+          <label>Exam Count:</label>
+          <input type="number" id="exams_count" class="form-control" value="0">
+          <label>Study Hours per Exam:</label>
+          <input type="number" id="exams_hours" step='0.01' class="form-control" value="0">
+          <p class="output-text" id="exam-output">Exam Study Time: 0.00 hours/week</p>
+
+        </div>
+
+        <!--Assignments-->
+        <div class="form-section">
+          <h4>Assignments</h4>
+          <label>Assignments per Semester:</label>
+          <input type="number" id="assignments_count" class="form-control" value="0">
+          <label>Hours per Assignment:</label>
+          <input type="number" id="assignments_hours" step="0.01" class="form-control" value="0">
+          <p class="output-text" id="assignment-output">Other Assignments: 0.00 hours/week</p>
+        </div>
+
+        <!--Cell for estimated Workload and Pie Chart-->
+        <div class="text-center mt-4">
+          <h3>Estimated Workload</h3>
+          <div class="row text-start justify-content-center">
+            <div class="col-sm-6 mb-2">
+              <div class="p-2 bg-light border rounded">
+                <span class="workload-label">Out-of-Class</span>
+                <p id="outclass-output" class="mb-0">Weekly: 0.00 hours<br>Daily: 0.00 hours</p>
+              </div>
+            </div>
+            <div class="col-sm-6 mb-2">
+              <div class="p-2 bg-light border rounded">
+                <span class="workload-label">In-Class</span>
+                <p id="inclass-output" class="mb-0">Weekly: 0.00 hours<br>Daily: 0.00 hours</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-center">
+            <canvas id="workloadChart" style="max-width: 250px; max-height: 250px;"></canvas>
+          </div>
+        </div>
+
+        <div class="text-center mt-4">
+          <h3>Total Workload</h3>
+          <div class="row text-start justify-content-center">
+            <div class="col-sm-6 mb-2">
+              <div class="p-2 bg-light border rounded">
+                <span class="workload-label">Out-of-Class</span>
+                <p id="total-outclass-output" class="mb-0">0.00 hours</p>
+              </div>
+            </div>
+            <div class="col-sm-6 mb-2">
+              <div class="p-2 bg-light border rounded">
+                <span class="workload-label">In-Class</span>
+                <p id="total-inclass-output" class="mb-0">0.00 hours</p>
+              </div>
+            </div>
+          </div>
+
+          <!--Submit and Reset button-->
+          <div class="form-section text-center">
+            <button type="submit" class="btn btn-primary">Calculate</button>
+            <button type="button" id="reset-button" class="btn btn-secondary ms-2">Reset</button>
+          </div>
+
+           <!--Button for class schedule page-->
+          <div class="text-center mt-2">
+            <a href="SeatCalculator.html" target="_blank" class="btn btn-outline-light"
+              style="background-color: white; color: black;">
+              Click here for schedule calculation
+            </a>
+          </div>
+
+
+          <!--Button for extra info page-->
+          <div class="text-center mt-2">
+            <a href="Details.html" target="_blank" class="btn btn-outline-light"
+              style="background-color: white; color: black;">
+              Click here to learn more about workload estimation
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+  </form>
+
+
+
+
+
+
+
+
+
+
+  <script>
+    const readingRates = {
+      "Survey": { "No New Concepts": [67, 50, 40], "Some New Concepts": [47, 35, 28], "Many New Concepts": [33, 25, 20] },
+      "Understand": { "No New Concepts": [33, 25, 20], "Some New Concepts": [24, 18, 14], "Many New Concepts": [17, 13, 10] },
+      "Engage": { "No New Concepts": [17, 13, 10], "Some New Concepts": [12, 9, 7], "Many New Concepts": [9, 7, 5] }
+    };
+
+    const writingTimes = {
+      "Reflection/Narrative; No Drafting": { "250": 45, "500": 90 },
+      "Reflection/Narrative; Minimal Drafting": { "250": 60, "500": 120 },
+      "Reflection/Narrative; Extensive Drafting": { "250": 75, "500": 150 },
+      "Argument; No Drafting": { "250": 90, "500": 180 },
+      "Argument; Minimal Drafting": { "250": 120, "500": 240 },
+      "Argument; Extensive Drafting": { "250": 150, "500": 300 },
+      "Research; No Drafting": { "250": 180, "500": 360 },
+      "Research; Minimal Drafting": { "250": 240, "500": 480 },
+      "Research; Extensive Drafting": { "250": 300, "500": 600 }
+    };
+
+    const materialIndexMap = { "450 Words": 0, "600 Words": 1, "750 Words": 2 };
+
+    const form = document.getElementById('estimator-form');
+    const outclass_output = document.getElementById('outclass-output');
+    const inclass_output = document.getElementById('inclass-output');
+    const chartCtx = document.getElementById('workloadChart').getContext('2d');
+    let chart;
+
+    // Reset button logic
+    document.getElementById('reset-button').addEventListener('click', function () {
+      form.reset();
+
+      outclass_output.innerHTML = 'Weekly: 0.00 hours<br>Daily: 0.00 hours';
+      inclass_output.innerHTML = 'Weekly: 0.00 hours<br>Daily: 0.00 hours';
+
+      document.getElementById('reading-output').innerText = 'Reading Time: 0.00 hours/week';
+      document.getElementById('writing-output').innerText = 'Writing Speed: 0.00 hours/page';
+      document.getElementById('assignment-output').innerText = 'Other Assignments: 0.00 hours/week';
+      document.getElementById('discussion-output').innerText = 'Discussion Time: 0.00 hours/week';
+      document.getElementById('exam-output').innerText = 'Exam Study Time: 0.00 hours/week';
+      document.getElementById('meeting-output').innerText = 'Meeting Times: 0.00 hours/week';
+      document.getElementById('total-outclass-output').innerHTML = '0.00 hours';
+      document.getElementById('total-inclass-output').innerHTML = '0.00 hours';
+
+      
+
+      document.querySelectorAll('.output-text').forEach(el => {
+        el.style.color = 'black';
+      });
+
+      drawPieChart(0);
+    });
+
+
+    //Handles input reading, workload calculations, UI updates and chart redraw
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      //Ensures the user entered a valid course duration
+      const weeks = parseInt(document.getElementById('weeks').value);
+      if (isNaN(weeks) || weeks <= 0) {
+        output.innerText = "Please enter a valid number of weeks (greater than 0).";
+        drawPieChart(0);
+        return;
+      }
+
+
+
+
+      // Compute reading time
+      const r_purpose = document.getElementById('reading_purpose').value;
+      const r_concept = document.getElementById('reading_concept').value;
+      const r_mat = document.getElementById('reading_material').value;
+      const r_pages = parseFloat(document.getElementById('reading_pages').value);
+      const r_index = materialIndexMap[r_mat];
+      const r_rate = readingRates[r_purpose][r_concept][r_index];
+      const reading_hours = r_pages / r_rate;
+      const readingOutput = document.getElementById('reading-output');
+      const readingValue = reading_hours.toFixed(2);
+      readingOutput.innerText = `Reading Time: ${readingValue} hours/week`;
+      readingOutput.style.color = (readingValue !== '0.00') ? '#b30000' : 'black';
+
+      // Compute writing time
+      const writingOutput = document.getElementById('writing-output');
+      const w_key = `${document.getElementById('writing_purpose').value}; ${document.getElementById('writing_drafting').value}`;
+      const spacing = document.getElementById('writing_spacing').value;
+      const writing_pages = parseFloat(document.getElementById('writing_pages').value);
+      const writing_minutes_per_page = writingTimes[w_key][spacing];
+      const writing_hours_per_page = writing_minutes_per_page / 60;
+      const writing_hours = (writing_minutes_per_page * (writing_pages / weeks)) / 60;
+      if (writing_pages > 1) {
+        writingOutput.innerText = `Writing Speed: ${writing_hours_per_page.toFixed(2)} hours/page`;
+        writingOutput.style.color = '#b30000';
+      } else {
+        writingOutput.innerText = `Writing Speed: 0.00 hours/page`;
+        writingOutput.style.color = 'black';
+      }
+
+      // Compute assignment time
+      const assignments = (parseFloat(document.getElementById('assignments_count').value) * parseFloat(document.getElementById('assignments_hours').value)) / weeks;
+      const assignmentOutput = document.getElementById('assignment-output');
+      const assignmentValue = assignments.toFixed(2);
+      assignmentOutput.innerText = `Other Assignments: ${assignmentValue} hours/week`;
+      assignmentOutput.style.color = (assignmentValue !== '0.00') ? '#b30000' : 'black';
+
+      // Compute exam study time
+      const exams = (parseFloat(document.getElementById('exams_count').value) * parseFloat(document.getElementById('exams_hours').value)) / weeks;
+      const examOutput = document.getElementById('exam-output');
+      const examValue = exams.toFixed(2);
+      examOutput.innerText = `Exam Study Time: ${examValue} hours/week`;
+      examOutput.style.color = (examValue !== '0.00') ? '#b30000' : 'black';
+
+      // Compute video time
+      const videos = parseFloat(document.getElementById('videos').value);
+
+      // Compute meeting time
+      const meetings = parseFloat(document.getElementById('meetings_count').value) * parseFloat(document.getElementById('meetings_length').value);
+      const meetingOutput = document.getElementById('meeting-output');
+      const meetingValue = meetings.toFixed(2);
+      meetingOutput.innerText = `Meeting Times: ${meetingValue} hours/week`;
+      meetingOutput.style.color = (meetingValue !== '0.00') ? '#b30000' : 'black';
+
+
+      // Compute discussion time
+      const discussions = (parseFloat(document.getElementById('discussions_count').value) * parseFloat(document.getElementById('discussions_words').value)) / 250;
+      const discussionOutput = document.getElementById('discussion-output');
+      const discussionValue = discussions.toFixed(2);
+      discussionOutput.innerText = `Discussion Time: ${discussionValue} hours/week`;
+      discussionOutput.style.color = (discussionValue !== '0.00') ? '#b30000' : 'black';
+
+      // Find total weekly time, and daily time by dividing by 5
+      const inclass_total = meetings;
+      const outclass_total = reading_hours + writing_hours + assignments + exams + videos + discussions;
+      const inclass_daily = inclass_total / 5;
+      const outclass_daily = outclass_total / 5;
+
+      // Update inclass and out of class work
+      outclass_output.innerHTML = `Weekly: ${outclass_total.toFixed(2)} hours<br>Daily: ${outclass_daily.toFixed(2)} hours`;
+      inclass_output.innerHTML = `Weekly: ${inclass_total.toFixed(2)} hours<br>Daily: ${inclass_daily.toFixed(2)} hours`;
+
+      const total_outclass_semester = outclass_total * weeks;
+      const total_inclass_semester = inclass_total * weeks;
+
+      // Update total workload section
+      document.getElementById('total-outclass-output').innerHTML = `${total_outclass_semester.toFixed(2)} hours`;
+      document.getElementById('total-inclass-output').innerHTML = `${total_inclass_semester.toFixed(2)} hours`;
+
+      drawPieChart(outclass_daily, inclass_daily);
+    });
+
+    // Pie chart function with animation with daily (workload/5)
+    function drawPieChart(outclass_daily, inclass_daily, animate = true) {
+      const outclass_workload = isNaN(outclass_daily) || outclass_daily <= 0 ? 0 : outclass_daily;
+      const inclass_workload = isNaN(inclass_daily) || inclass_daily <= 0 ? 0 : inclass_daily;
+
+      const free = Math.max(0, 24 - outclass_workload - inclass_workload);
+
+      if (chart) {
+        if (!animate) {
+          // Disable animation on update
+          chart.options.animation = false;
+        } else {
+          chart.options.animation = {
+            duration: 1600,
+            easing: 'easeOutQuart'
+          };
+        }
+
+        chart.data.datasets[0].data = [outclass_workload, inclass_workload, free];
+        chart.update();
+        return;
+      }
+
+      // Initial creation
+      chart = new Chart(chartCtx, {
+        type: 'pie',
+        data: {
+          labels: ['Out-of-Class Workload', 'In-Class Workload', 'Free Time'],
+          datasets: [{
+            data: [outclass_workload, inclass_workload, free],
+            backgroundColor: ['black', 'grey', '#b30000']
+          }]
+        },
+        options: {
+          animation: {
+            duration: 800,
+            easing: 'easeOutQuart'
+          },
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { font: { size: 12 } }
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  let value = context.parsed;
+                  return `${value.toFixed(1)} hours`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    drawPieChart(0);
+  </script>
+
+
+</body>
+
+<!-- For improvements, show in-class time and at-home time. This could be accomplished with two pie charts 
+ or two different colors on the original pie. This can help obtain time at home to equal time in class
+ 
+ Allow for decimal spots on hour time-->
+
+</html>
